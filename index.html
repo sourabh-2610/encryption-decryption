@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Encryption & Decryption</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: #1a1a2e;
+            --accent-cyan: #00d4ff;
+            --accent-purple: #a855f7;
+            --accent-pink: #ec4899;
+            --accent-green: #22c55e;
+            --accent-orange: #f97316;
+            --accent-red: #ef4444;
+            --text-primary: #f0f0f5;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            --border: #2a2a3e;
+            --glow-cyan: 0 0 30px rgba(0, 212, 255, 0.3);
+            --glow-purple: 0 0 30px rgba(168, 85, 247, 0.3);
+            --radius: 16px;
+            --radius-sm: 10px;
+        }
+
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-primary); }
+        ::-webkit-scrollbar-thumb { background: var(--accent-cyan); border-radius: 4px; }
+
+        /* Background */
+        .bg-grid {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            background-image:
+                linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+        }
+
+        .bg-orbs { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+        .orb {
+            position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.15;
+            animation: orbFloat 20s ease-in-out infinite;
+        }
+        .orb-1 { width: 500px; height: 500px; background: var(--accent-cyan); top: -10%; left: -5%; }
+        .orb-2 { width: 400px; height: 400px; background: var(--accent-purple); top: 40%; right: -10%; animation-delay: -7s; }
+        .orb-3 { width: 350px; height: 350px; background: var(--accent-pink); bottom: -5%; left: 30%; animation-delay: -14s; }
+
+        @keyframes orbFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -40px) scale(1.1); }
+            66% { transform: translate(-20px, 30px) scale(0.9); }
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            background: rgba(10, 10, 15, 0.8); backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border); padding: 0 2rem;
+        }
+        .nav-inner {
+            max-width: 1200px; margin: 0 auto;
+            display: flex; align-items: center; justify-content: center;
+            height: 60px;
+        }
+        .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+        .nav-links a {
+            color: var(--text-secondary); text-decoration: none; font-size: 0.9rem;
+            font-weight: 500; transition: color 0.3s; position: relative;
+        }
+        .nav-links a::after {
+            content: ''; position: absolute; bottom: -4px; left: 0; right: 0;
+            height: 2px; background: var(--accent-cyan); transform: scaleX(0); transition: transform 0.3s;
+        }
+        .nav-links a:hover { color: var(--text-primary); }
+        .nav-links a:hover::after { transform: scaleX(1); }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; position: relative; z-index: 1; }
+        section { padding: 5rem 0; }
+
+        /* Hero */
+        .hero {
+            min-height: 100vh; display: flex; align-items: center; justify-content: center;
+            text-align: center; position: relative;
+        }
+        .hero-content { max-width: 800px; }
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4.5rem); font-weight: 900;
+            line-height: 1.1; margin-bottom: 1.5rem;
+            animation: fadeInUp 0.8s ease 0.2s both;
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple), var(--accent-pink));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .hero p {
+            font-size: 1.2rem; color: var(--text-secondary); max-width: 600px; margin: 0 auto 2.5rem;
+            animation: fadeInUp 0.8s ease 0.4s both;
+        }
+        .hero-buttons {
+            display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;
+            animation: fadeInUp 0.8s ease 0.6s both;
+        }
+
+        .btn {
+            padding: 14px 32px; border-radius: 12px; font-size: 1rem; font-weight: 600;
+            text-decoration: none; cursor: pointer; transition: all 0.3s;
+            display: inline-flex; align-items: center; gap: 8px; border: none;
+            font-family: 'Inter', sans-serif;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            color: #fff; box-shadow: var(--glow-cyan);
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 50px rgba(0, 212, 255, 0.5); }
+        .btn-secondary {
+            background: transparent; color: var(--text-primary); border: 1px solid var(--border);
+        }
+        .btn-secondary:hover { border-color: var(--accent-cyan); background: rgba(0, 212, 255, 0.05); }
+
+        #matrix-canvas {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0.06; z-index: -1;
+        }
+
+        /* Section headers */
+        .section-header { text-align: center; margin-bottom: 3.5rem; }
+        .section-tag {
+            display: inline-block; font-size: 0.8rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 3px; color: var(--accent-cyan); margin-bottom: 1rem;
+        }
+        .section-header h2 { font-size: 2.5rem; font-weight: 800; margin-bottom: 1rem; }
+        .section-header p { color: var(--text-secondary); max-width: 600px; margin: 0 auto; font-size: 1.1rem; }
+
+        /* Concept cards */
+        .concepts-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 2rem;
+        }
+        .concept-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 2.5rem; position: relative;
+            overflow: hidden; transition: all 0.4s; cursor: pointer;
+        }
+        .concept-card:hover { border-color: var(--accent-cyan); transform: translateY(-5px); box-shadow: var(--glow-cyan); }
+        .concept-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0;
+            height: 3px; background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));
+            opacity: 0; transition: opacity 0.4s;
+        }
+        .concept-card:hover::before { opacity: 1; }
+        .card-icon {
+            width: 60px; height: 60px; border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.8rem; margin-bottom: 1.5rem;
+        }
+        .card-icon.cyan { background: rgba(0, 212, 255, 0.1); color: var(--accent-cyan); }
+        .card-icon.purple { background: rgba(168, 85, 247, 0.1); color: var(--accent-purple); }
+        .concept-card h3 { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.8rem; }
+        .concept-card p { color: var(--text-secondary); font-size: 0.95rem; }
+        .card-cta {
+            display: inline-flex; align-items: center; gap: 6px;
+            margin-top: 1rem; font-size: 0.85rem; font-weight: 600;
+            color: var(--accent-cyan); transition: gap 0.3s;
+        }
+        .concept-card:hover .card-cta { gap: 10px; }
+
+        /* Mini demo panel */
+        .mini-demo {
+            max-height: 0; overflow: hidden; opacity: 0;
+            transition: max-height 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s, margin-top 0.4s;
+            margin-top: 0;
+        }
+        .mini-demo.open {
+            max-height: 500px; opacity: 1; margin-top: 1.5rem;
+        }
+        .mini-demo-inner {
+            padding-top: 1.5rem; border-top: 1px solid var(--border);
+        }
+        .mini-input {
+            width: 100%; padding: 10px 14px; background: var(--bg-primary);
+            border: 1px solid var(--border); border-radius: var(--radius-sm);
+            color: var(--text-primary); font-family: 'Inter', sans-serif;
+            font-size: 0.9rem; transition: border-color 0.3s;
+        }
+        .mini-input:focus { outline: none; border-color: var(--accent-cyan); box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1); }
+        .mini-output {
+            margin-top: 0.8rem; padding: 12px 14px; background: var(--bg-primary);
+            border: 1px solid var(--border); border-radius: var(--radius-sm);
+            font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;
+            min-height: 44px; word-break: break-all; transition: all 0.3s;
+        }
+        .mini-label {
+            font-size: 0.75rem; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 1px; margin-bottom: 0.5rem; display: block;
+        }
+        .mini-label.cyan { color: var(--accent-cyan); }
+        .mini-label.purple { color: var(--accent-purple); }
+        .char-animated {
+            display: inline-block; transition: all 0.3s;
+            animation: charPop 0.4s ease;
+        }
+        @keyframes charPop {
+            0% { transform: translateY(-8px) scale(1.3); opacity: 0; }
+            100% { transform: translateY(0) scale(1); opacity: 1; }
+        }
+
+        /* How it works */
+        .how-block {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 2.5rem; margin-bottom: 2.5rem;
+            transition: all 0.4s;
+        }
+        .how-block:hover { border-color: var(--accent-cyan); }
+        .how-block h3 {
+            font-size: 1.4rem; font-weight: 800; margin-bottom: 1.5rem;
+            display: flex; align-items: center; gap: 12px;
+        }
+        .how-block .step-list { list-style: none; }
+        .how-block .step-list li {
+            display: flex; align-items: flex-start; gap: 1rem;
+            padding: 1rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .how-block .step-list li:last-child { border-bottom: none; }
+        .step-num {
+            flex-shrink: 0; width: 36px; height: 36px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 0.9rem;
+        }
+        .step-num.cyan { background: rgba(0, 212, 255, 0.15); color: var(--accent-cyan); }
+        .step-num.purple { background: rgba(168, 85, 247, 0.15); color: var(--accent-purple); }
+        .step-content h4 { font-size: 1rem; font-weight: 700; margin-bottom: 0.2rem; }
+        .step-content p { color: var(--text-secondary); font-size: 0.9rem; }
+
+        /* Flow diagram */
+        .flow-container {
+            display: flex; align-items: center; justify-content: center;
+            gap: 0.8rem; flex-wrap: wrap; margin: 2rem 0;
+        }
+        .flow-box {
+            background: var(--bg-primary); border: 1px solid var(--border);
+            border-radius: var(--radius-sm); padding: 1.2rem 1rem;
+            text-align: center; min-width: 140px; flex: 1; transition: all 0.3s;
+        }
+        .flow-box:hover { border-color: var(--accent-purple); }
+        .flow-box .icon { font-size: 2rem; margin-bottom: 0.5rem; }
+        .flow-box h4 { font-size: 0.85rem; font-weight: 700; margin-bottom: 0.2rem; }
+        .flow-box p { font-size: 0.75rem; color: var(--text-muted); }
+
+        .flow-arrow {
+            font-size: 1.3rem; color: var(--accent-cyan);
+            animation: arrowPulse 1.5s ease-in-out infinite;
+        }
+        @keyframes arrowPulse {
+            0%, 100% { opacity: 0.4; transform: translateX(0); }
+            50% { opacity: 1; transform: translateX(5px); }
+        }
+
+        /* Real-life examples */
+        .examples-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;
+        }
+        .example-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 2rem; transition: all 0.3s;
+        }
+        .example-card:hover { border-color: var(--accent-pink); transform: translateY(-3px); }
+        .example-icon { font-size: 2.5rem; margin-bottom: 1rem; }
+        .example-card h4 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .example-card p { color: var(--text-secondary); font-size: 0.9rem; }
+        .example-analogy {
+            margin-top: 1rem; padding: 0.8rem 1rem;
+            background: rgba(0, 212, 255, 0.05); border-left: 3px solid var(--accent-cyan);
+            border-radius: 0 8px 8px 0; font-size: 0.85rem; color: var(--accent-cyan);
+        }
+
+        /* Lab container */
+        .lab-container {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius); overflow: hidden; margin-bottom: 2.5rem;
+        }
+        .lab-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 1.2rem 2rem; border-bottom: 1px solid var(--border);
+            background: rgba(0, 212, 255, 0.03);
+        }
+        .lab-header h3 { font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+        .lab-body { padding: 2rem; }
+        .lab-description { color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 1.5rem; }
+
+        .input-group { margin-bottom: 1.2rem; }
+        .input-group label {
+            display: block; font-size: 0.85rem; font-weight: 600;
+            margin-bottom: 0.5rem; color: var(--text-secondary);
+        }
+        .input-field {
+            width: 100%; padding: 12px 16px; background: var(--bg-primary);
+            border: 1px solid var(--border); border-radius: var(--radius-sm);
+            color: var(--text-primary); font-family: 'Inter', sans-serif;
+            font-size: 0.95rem; transition: border-color 0.3s; resize: vertical;
+        }
+        .input-field:focus { outline: none; border-color: var(--accent-cyan); box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1); }
+
+        .output-box {
+            background: var(--bg-primary); border: 1px solid var(--border);
+            border-radius: var(--radius-sm); padding: 16px;
+            font-family: 'JetBrains Mono', monospace; font-size: 0.9rem;
+            min-height: 60px; word-break: break-all;
+            color: var(--accent-green); position: relative;
+        }
+        .output-label {
+            position: absolute; top: 8px; right: 12px; font-size: 0.7rem;
+            color: var(--text-muted); font-family: 'Inter', sans-serif;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        .lab-actions { display: flex; gap: 0.8rem; margin: 1.5rem 0; flex-wrap: wrap; }
+
+        .btn-lab {
+            padding: 10px 24px; border-radius: var(--radius-sm); font-size: 0.9rem;
+            font-weight: 600; cursor: pointer; transition: all 0.3s;
+            border: none; font-family: 'Inter', sans-serif;
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-encrypt { background: linear-gradient(135deg, var(--accent-cyan), #0090b3); color: #fff; }
+        .btn-encrypt:hover { box-shadow: var(--glow-cyan); transform: translateY(-1px); }
+        .btn-decrypt { background: linear-gradient(135deg, var(--accent-purple), #7c3aed); color: #fff; }
+        .btn-decrypt:hover { box-shadow: var(--glow-purple); transform: translateY(-1px); }
+        .btn-clear { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
+        .btn-clear:hover { border-color: var(--accent-red); color: var(--accent-red); }
+        .btn-copy { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
+        .btn-copy:hover { border-color: var(--accent-green); color: var(--accent-green); }
+
+        .callout {
+            background: rgba(0, 212, 255, 0.05); border: 1px solid rgba(0, 212, 255, 0.2);
+            border-left: 3px solid var(--accent-cyan); border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            padding: 1.2rem 1.5rem; margin: 1.5rem 0;
+        }
+        .callout h4 { font-size: 0.9rem; color: var(--accent-cyan); margin-bottom: 0.3rem; }
+        .callout p { font-size: 0.9rem; color: var(--text-secondary); }
+
+        /* Password strength */
+        .strength-bar {
+            height: 6px; background: var(--border); border-radius: 3px; margin-top: 0.5rem; overflow: hidden;
+        }
+        .strength-fill { height: 100%; border-radius: 3px; transition: width 0.5s, background 0.5s; width: 0%; }
+        .strength-text { font-size: 0.8rem; margin-top: 0.3rem; font-weight: 600; }
+
+        /* Mode toggle */
+        .mode-toggle {
+            display: flex; background: var(--bg-primary); border-radius: var(--radius-sm);
+            padding: 4px; margin-bottom: 1.5rem; border: 1px solid var(--border);
+        }
+        .mode-btn {
+            flex: 1; padding: 10px 20px; border: none; background: transparent;
+            color: var(--text-secondary); font-family: 'Inter', sans-serif;
+            font-size: 0.9rem; font-weight: 600; cursor: pointer;
+            border-radius: 8px; transition: all 0.3s;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+        }
+        .mode-btn.active-encrypt { background: linear-gradient(135deg, var(--accent-cyan), #0090b3); color: #fff; }
+        .mode-btn.active-decrypt { background: linear-gradient(135deg, var(--accent-purple), #7c3aed); color: #fff; }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid var(--border); padding: 6rem 0; text-align: center;
+            overflow: hidden;
+        }
+        .footer-text {
+            font-size: clamp(2.5rem, 7vw, 5rem); font-weight: 900;
+            background: linear-gradient(270deg, var(--accent-cyan), var(--accent-purple), var(--accent-pink), var(--accent-cyan));
+            background-size: 300% 300%;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            animation: gradientShift 4s ease infinite, footerPulse 3s ease-in-out infinite;
+            line-height: 1.2; letter-spacing: -1px;
+            filter: drop-shadow(0 0 40px rgba(0, 212, 255, 0.3));
+        }
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        @keyframes footerPulse {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 40px rgba(0, 212, 255, 0.3)); }
+            50% { transform: scale(1.03); filter: drop-shadow(0 0 60px rgba(168, 85, 247, 0.5)); }
+        }
+        .footer-sub { color: var(--text-muted); font-size: 0.9rem; margin-top: 1.5rem; }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        .reveal {
+            opacity: 0; transform: translateY(40px);
+            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+
+        /* Copy toast */
+        .copy-toast {
+            position: fixed; bottom: 2rem; right: 2rem; background: var(--accent-green);
+            color: #000; padding: 12px 24px; border-radius: var(--radius-sm);
+            font-weight: 600; font-size: 0.9rem; transform: translateY(100px);
+            opacity: 0; transition: all 0.4s; z-index: 999;
+        }
+        .copy-toast.show { transform: translateY(0); opacity: 1; }
+
+        @media (max-width: 768px) {
+            .nav-links { gap: 1.5rem; }
+            .flow-container { flex-direction: column; }
+            .flow-arrow { transform: rotate(90deg); }
+            section { padding: 3.5rem 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+</div>
+
+<!-- Navigation -->
+<nav>
+    <div class="nav-inner">
+        <ul class="nav-links">
+            <li><a href="#concepts">Concepts</a></li>
+            <li><a href="#how-it-works">How It Works</a></li>
+            <li><a href="#examples">Real Life</a></li>
+            <li><a href="#demo">Live Demo</a></li>
+            <li><a href="#strength">Password Check</a></li>
+        </ul>
+    </div>
+</nav>
+
+<div class="copy-toast" id="copyToast">✓ Copied to clipboard!</div>
+
+<!-- ===== HERO ===== -->
+<section class="hero">
+    <canvas id="matrix-canvas"></canvas>
+    <div class="hero-content">
+        <h1><span class="gradient-text">Encryption</span> & <span class="gradient-text">Decryption</span></h1>
+        <p>Understand how your data is protected every day. Learn the concepts, see real-life examples, and try live encryption & decryption yourself.</p>
+        <div class="hero-buttons">
+            <a href="#demo" class="btn btn-primary">🔐 Try Live Demo</a>
+            <a href="#concepts" class="btn btn-secondary">📖 Learn First</a>
+        </div>
+    </div>
+</section>
+
+<!-- ===== CONCEPTS ===== -->
+<section id="concepts">
+    <div class="container">
+        <div class="section-header reveal">
+            <span class="section-tag">Fundamentals</span>
+            <h2>What is Encryption & Decryption?</h2>
+            <p>The two sides of the same coin that keep your data safe</p>
+        </div>
+
+        <div class="concepts-grid">
+            <div class="concept-card reveal" onclick="toggleMiniDemo('encryptDemo', this)">
+                <div class="card-icon cyan">🔐</div>
+                <h3>Encryption</h3>
+                <p>The process of converting <strong>plaintext</strong> (readable data) into <strong>ciphertext</strong> (scrambled, unreadable data) using a mathematical algorithm and a secret key. Think of it like locking your diary with a key — only someone with the same key can read it.</p>
+                <div class="card-cta">Click to try it live →</div>
+
+                <!-- Mini Encrypt Demo -->
+                <div class="mini-demo" id="encryptDemo" onclick="event.stopPropagation()">
+                    <div class="mini-demo-inner">
+                        <span class="mini-label cyan">Type anything and watch it encrypt instantly</span>
+                        <input type="text" class="mini-input" id="miniEncInput" placeholder="e.g. Hello World" maxlength="40">
+                        <div class="mini-output" id="miniEncOutput" style="color: var(--accent-cyan);">
+                            <span style="color: var(--text-muted); font-family: Inter, sans-serif; font-size: 0.85rem;">Encrypted text will appear here...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="concept-card reveal" onclick="toggleMiniDemo('decryptDemo', this)">
+                <div class="card-icon purple">🔓</div>
+                <h3>Decryption</h3>
+                <p>The reverse of encryption — transforming <strong>ciphertext</strong> back into <strong>plaintext</strong>. It requires the correct key to unlock the scrambled data. Without the right key, the data remains completely unreadable — like gibberish.</p>
+                <div class="card-cta">Click to try it live →</div>
+
+                <!-- Mini Decrypt Demo -->
+                <div class="mini-demo" id="decryptDemo" onclick="event.stopPropagation()">
+                    <div class="mini-demo-inner">
+                        <span class="mini-label purple">Paste encrypted text and see it decrypted</span>
+                        <input type="text" class="mini-input" id="miniDecInput" placeholder="Paste the scrambled text from Encryption card..." maxlength="80">
+                        <div class="mini-output" id="miniDecOutput" style="color: var(--accent-green);">
+                            <span style="color: var(--text-muted); font-family: Inter, sans-serif; font-size: 0.85rem;">Decrypted text will appear here...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== HOW IT WORKS ===== -->
+<section id="how-it-works">
+    <div class="container">
+        <div class="section-header reveal">
+            <span class="section-tag">Step by Step</span>
+            <h2>How Does It Work?</h2>
+            <p>Follow the journey of your data as it gets locked and unlocked</p>
+        </div>
+
+        <!-- How Encryption Works -->
+        <div class="how-block reveal">
+            <h3>🔒 How Encryption Works</h3>
+            <div class="flow-container" style="margin-bottom: 2rem;">
+                <div class="flow-box">
+                    <div class="icon">📝</div>
+                    <h4>Plaintext</h4>
+                    <p>"Hello World"</p>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">
+                    <div class="icon">🔑</div>
+                    <h4>Secret Key</h4>
+                    <p>Your password</p>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">
+                    <div class="icon">⚙️</div>
+                    <h4>Algorithm</h4>
+                    <p>AES / RSA</p>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">
+                    <div class="icon">🔒</div>
+                    <h4>Ciphertext</h4>
+                    <p>"aX9#kL2@..."</p>
+                </div>
+            </div>
+            <ul class="step-list">
+                <li>
+                    <div class="step-num cyan">1</div>
+                    <div class="step-content">
+                        <h4>You write your message (Plaintext)</h4>
+                        <p>This is the original readable data — like typing "My password is 1234" in a message.</p>
+                    </div>
+                </li>
+                <li>
+                    <div class="step-num cyan">2</div>
+                    <div class="step-content">
+                        <h4>A secret key is used</h4>
+                        <p>The key is like a password that tells the algorithm how to scramble the data. Without this key, nobody can reverse the process.</p>
+                    </div>
+                </li>
+                <li>
+                    <div class="step-num cyan">3</div>
+                    <div class="step-content">
+                        <h4>The algorithm scrambles the data</h4>
+                        <p>The encryption algorithm (like AES-256) takes your plaintext + key and runs complex math to produce completely unreadable output.</p>
+                    </div>
+                </li>
+                <li>
+                    <div class="step-num cyan">4</div>
+                    <div class="step-content">
+                        <h4>Output is Ciphertext</h4>
+                        <p>The result is scrambled, random-looking text like "aX9#kL2@mP..." — even if someone intercepts it, they can't read it.</p>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <!-- How Decryption Works -->
+        <div class="how-block reveal">
+            <h3>🔓 How Decryption Works</h3>
+            <div class="flow-container" style="margin-bottom: 2rem;">
+                <div class="flow-box">
+                    <div class="icon">🔒</div>
+                    <h4>Ciphertext</h4>
+                    <p>"aX9#kL2@..."</p>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">
+                    <div class="icon">🔑</div>
+                    <h4>Same Key</h4>
+                    <p>Your password</p>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">
+                    <div class="icon">⚙️</div>
+                    <h4>Algorithm</h4>
+                    <p>Reverse process</p>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-box">
+                    <div class="icon">📝</div>
+                    <h4>Plaintext</h4>
+                    <p>"Hello World"</p>
+                </div>
+            </div>
+            <ul class="step-list">
+                <li>
+                    <div class="step-num purple">1</div>
+                    <div class="step-content">
+                        <h4>You receive the scrambled text (Ciphertext)</h4>
+                        <p>The encrypted message arrives — it looks like complete nonsense: "aX9#kL2@mP..."</p>
+                    </div>
+                </li>
+                <li>
+                    <div class="step-num purple">2</div>
+                    <div class="step-content">
+                        <h4>You provide the same secret key</h4>
+                        <p>You need the exact same key that was used for encryption. Even one character difference and it won't work!</p>
+                    </div>
+                </li>
+                <li>
+                    <div class="step-num purple">3</div>
+                    <div class="step-content">
+                        <h4>The algorithm reverses the process</h4>
+                        <p>The decryption algorithm takes the ciphertext + your key and runs the math in reverse to reconstruct the original message.</p>
+                    </div>
+                </li>
+                <li>
+                    <div class="step-num purple">4</div>
+                    <div class="step-content">
+                        <h4>You get back the original message (Plaintext)</h4>
+                        <p>The readable message is restored — "My password is 1234" — exactly as it was before encryption.</p>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<!-- ===== REAL-LIFE EXAMPLES ===== -->
+<section id="examples">
+    <div class="container">
+        <div class="section-header reveal">
+            <span class="section-tag">Everyday Life</span>
+            <h2>Simple Real-Life Examples</h2>
+            <p>You already use encryption every day — here's how it works in simple terms</p>
+        </div>
+
+        <div class="examples-grid">
+            <div class="example-card reveal">
+                <div class="example-icon">💬</div>
+                <h4>Sending a WhatsApp Message</h4>
+                <p>When you type "Happy Birthday!" to your friend, WhatsApp <strong>encrypts</strong> it before sending. Even if a hacker intercepts the message in transit, they only see gibberish. Your friend's phone has the key to <strong>decrypt</strong> it back to "Happy Birthday!"</p>
+                <div class="example-analogy">🏠 Analogy: Like putting your letter in a locked box — only your friend has the key to open it.</div>
+            </div>
+            <div class="example-card reveal">
+                <div class="example-icon">💳</div>
+                <h4>Making an Online Payment</h4>
+                <p>When you enter your card number on Amazon, your browser <strong>encrypts</strong> it using HTTPS. The scrambled card number travels through the internet safely. Only Amazon's server can <strong>decrypt</strong> and read your actual card number.</p>
+                <div class="example-analogy">🔐 Analogy: Like speaking in a secret code over the phone — eavesdroppers hear nonsense.</div>
+            </div>
+            <div class="example-card reveal">
+                <div class="example-icon">📱</div>
+                <h4>Your Phone's Lock Screen</h4>
+                <p>When you set a PIN or password on your phone, all your photos, messages, and apps are <strong>encrypted</strong>. If someone steals your phone, they can't access anything — the data is scrambled without your PIN to <strong>decrypt</strong> it.</p>
+                <div class="example-analogy">🏦 Analogy: Like a bank vault — even if thieves break in, they can't open the vault without the combination.</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== LIVE DEMO ===== -->
+<section id="demo">
+    <div class="container">
+        <div class="section-header reveal">
+            <span class="section-tag">Try It Yourself</span>
+            <h2>🔐 Live Encrypt & Decrypt Demo</h2>
+            <p>Enter a message and a secret key — see real AES-256 encryption happen in your browser</p>
+        </div>
+
+        <div class="lab-container reveal">
+            <div class="lab-header">
+                <h3>⚡ AES-256-GCM — Real Encryption</h3>
+                <span style="font-size: 0.75rem; color: var(--accent-green); font-weight: 600;">🟢 MILITARY GRADE</span>
+            </div>
+            <div class="lab-body">
+                <p class="lab-description">This uses the <strong>Web Crypto API</strong> — the same <strong>AES-256</strong> encryption used by banks, governments, and militaries worldwide. Everything runs locally in your browser. No data is sent anywhere.</p>
+
+                <!-- Mode toggle -->
+                <div class="mode-toggle">
+                    <button class="mode-btn active-encrypt" id="modeEncrypt" onclick="setMode('encrypt')">🔒 Encrypt</button>
+                    <button class="mode-btn" id="modeDecrypt" onclick="setMode('decrypt')">🔓 Decrypt</button>
+                </div>
+
+                <div class="input-group">
+                    <label id="messageLabel">📝 Your Secret Message</label>
+                    <textarea class="input-field" id="demoInput" rows="3" placeholder="Type your secret message here..."></textarea>
+                </div>
+
+                <div class="input-group">
+                    <label>🔑 Your Secret Key (Passphrase)</label>
+                    <input type="text" class="input-field" id="demoKey" placeholder="Enter a secret key (password)..." autocomplete="off">
+                </div>
+
+                <div class="lab-actions">
+                    <button class="btn-lab btn-encrypt" id="actionBtn" onclick="demoAction()">🔒 Encrypt Now</button>
+                    <button class="btn-lab btn-clear" onclick="demoClear()">✕ Clear</button>
+                    <button class="btn-lab btn-copy" onclick="copyOutput('demoOutput')">📋 Copy Result</button>
+                </div>
+
+                <div class="output-box" id="demoOutput">
+                    <span class="output-label">Output</span>
+                    <span style="color: var(--text-muted);">Your result will appear here...</span>
+                </div>
+
+                <div class="callout">
+                    <h4>💡 How to use</h4>
+                    <p><strong>To Encrypt:</strong> Type your message → Enter a secret key → Click Encrypt.<br>
+                    <strong>To Decrypt:</strong> Switch to Decrypt mode → Paste the encrypted text → Enter the <strong>same</strong> secret key → Click Decrypt.<br>
+                    If you forget the key, the data is gone forever — that's how strong AES-256 is!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== PASSWORD STRENGTH ===== -->
+<section id="strength">
+    <div class="container">
+        <div class="section-header reveal">
+            <span class="section-tag">Security Check</span>
+            <h2>🛡️ Password Strength Analyzer</h2>
+            <p>Encryption is only as strong as your key — check how strong your password really is</p>
+        </div>
+
+        <div class="lab-container reveal">
+            <div class="lab-header">
+                <h3>🔍 Test Your Password</h3>
+            </div>
+            <div class="lab-body">
+                <p class="lab-description">Type any password below and see its strength, entropy, and how long it would take a hacker to crack it using brute force with a modern GPU (10 billion guesses/second).</p>
+
+                <div class="input-group">
+                    <label>Enter a Password</label>
+                    <input type="text" class="input-field" id="passwordInput" placeholder="Test any password..." autocomplete="off">
+                    <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+                    <div class="strength-text" id="strengthText"></div>
+                </div>
+
+                <div id="passwordAnalysis"></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+    <div class="container">
+        <div class="footer-text">Thank You, Stay Classy</div>
+        <p class="footer-sub" style="margin-top: 1rem;">All encryption runs locally in your browser — your data never leaves your device.</p>
+    </div>
+</footer>
+
+<!-- ===== JAVASCRIPT ===== -->
+<script>
+// Matrix rain
+(function() {
+    const canvas = document.getElementById('matrix-canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const chars = '01アイウエオ暗号化復号'.split('');
+    const fontSize = 14;
+    const columns = Math.floor(canvas.width / fontSize);
+    const drops = Array(columns).fill(1);
+    function draw() {
+        ctx.fillStyle = 'rgba(10, 10, 15, 0.05)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#00d4ff';
+        ctx.font = fontSize + 'px monospace';
+        for (let i = 0; i < drops.length; i++) {
+            const text = chars[Math.floor(Math.random() * chars.length)];
+            ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+            if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+            drops[i]++;
+        }
+    }
+    setInterval(draw, 50);
+    window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
+})();
+
+// Scroll reveal
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('visible'); });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// Smooth scroll
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function(e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+});
+
+// ===== MINI DEMO: Toggle panels =====
+function toggleMiniDemo(id, card) {
+    const demo = document.getElementById(id);
+    const isOpen = demo.classList.contains('open');
+
+    // Close all mini demos first
+    document.querySelectorAll('.mini-demo').forEach(d => d.classList.remove('open'));
+    document.querySelectorAll('.card-cta').forEach(c => c.textContent = 'Click to try it live →');
+
+    if (!isOpen) {
+        demo.classList.add('open');
+        card.querySelector('.card-cta').textContent = 'Click to close ✕';
+        // Focus the input after animation
+        setTimeout(() => {
+            const input = demo.querySelector('.mini-input');
+            if (input) input.focus();
+        }, 300);
+    }
+}
+
+// ===== MINI DEMO: Live Encryption (Caesar with random key) =====
+const MINI_SHIFT = 7; // Fixed shift key for the demo
+
+document.getElementById('miniEncInput').addEventListener('input', function() {
+    const text = this.value;
+    const output = document.getElementById('miniEncOutput');
+
+    if (!text) {
+        output.innerHTML = '<span style="color: var(--text-muted); font-family: Inter, sans-serif; font-size: 0.85rem;">Encrypted text will appear here...</span>';
+        return;
+    }
+
+    // Encrypt each character with a shift cipher
+    let encrypted = '';
+    let html = '';
+    text.split('').forEach((char, i) => {
+        let encChar;
+        if (char.match(/[a-z]/)) {
+            encChar = String.fromCharCode(((char.charCodeAt(0) - 97 + MINI_SHIFT) % 26) + 97);
+        } else if (char.match(/[A-Z]/)) {
+            encChar = String.fromCharCode(((char.charCodeAt(0) - 65 + MINI_SHIFT) % 26) + 65);
+        } else {
+            encChar = char;
+        }
+        encrypted += encChar;
+        html += `<span class="char-animated" style="animation-delay: ${i * 0.03}s; color: var(--accent-cyan);">${encChar}</span>`;
+    });
+
+    output.innerHTML = html;
+    output.setAttribute('data-encrypted', encrypted);
+});
+
+// ===== MINI DEMO: Live Decryption =====
+document.getElementById('miniDecInput').addEventListener('input', function() {
+    const text = this.value;
+    const output = document.getElementById('miniDecOutput');
+
+    if (!text) {
+        output.innerHTML = '<span style="color: var(--text-muted); font-family: Inter, sans-serif; font-size: 0.85rem;">Decrypted text will appear here...</span>';
+        return;
+    }
+
+    // Decrypt each character by reversing the shift
+    let html = '';
+    text.split('').forEach((char, i) => {
+        let decChar;
+        if (char.match(/[a-z]/)) {
+            decChar = String.fromCharCode(((char.charCodeAt(0) - 97 - MINI_SHIFT + 26) % 26) + 97);
+        } else if (char.match(/[A-Z]/)) {
+            decChar = String.fromCharCode(((char.charCodeAt(0) - 65 - MINI_SHIFT + 26) % 26) + 65);
+        } else {
+            decChar = char;
+        }
+        html += `<span class="char-animated" style="animation-delay: ${i * 0.03}s; color: var(--accent-green);">${decChar}</span>`;
+    });
+
+    output.innerHTML = html;
+});
+
+// ===== DEMO: MODE TOGGLE =====
+let currentMode = 'encrypt';
+
+function setMode(mode) {
+    currentMode = mode;
+    const encBtn = document.getElementById('modeEncrypt');
+    const decBtn = document.getElementById('modeDecrypt');
+    const actionBtn = document.getElementById('actionBtn');
+    const label = document.getElementById('messageLabel');
+
+    if (mode === 'encrypt') {
+        encBtn.className = 'mode-btn active-encrypt';
+        decBtn.className = 'mode-btn';
+        actionBtn.className = 'btn-lab btn-encrypt';
+        actionBtn.innerHTML = '🔒 Encrypt Now';
+        label.textContent = '📝 Your Secret Message';
+        document.getElementById('demoInput').placeholder = 'Type your secret message here...';
+    } else {
+        encBtn.className = 'mode-btn';
+        decBtn.className = 'mode-btn active-decrypt';
+        actionBtn.className = 'btn-lab btn-decrypt';
+        actionBtn.innerHTML = '🔓 Decrypt Now';
+        label.textContent = '🔒 Encrypted Text';
+        document.getElementById('demoInput').placeholder = 'Paste the encrypted text here...';
+    }
+}
+
+// ===== AES-256-GCM =====
+async function deriveKey(password, salt) {
+    const enc = new TextEncoder();
+    const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']);
+    return crypto.subtle.deriveKey(
+        { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
+        keyMaterial,
+        { name: 'AES-GCM', length: 256 },
+        false,
+        ['encrypt', 'decrypt']
+    );
+}
+
+async function demoAction() {
+    if (currentMode === 'encrypt') await doEncrypt();
+    else await doDecrypt();
+}
+
+async function doEncrypt() {
+    const text = document.getElementById('demoInput').value;
+    const password = document.getElementById('demoKey').value;
+    const output = document.getElementById('demoOutput');
+
+    if (!text || !password) {
+        output.innerHTML = '<span class="output-label">Error</span><span style="color: var(--accent-red);">⚠️ Please enter both a message and a secret key!</span>';
+        return;
+    }
+
+    try {
+        const enc = new TextEncoder();
+        const salt = crypto.getRandomValues(new Uint8Array(16));
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+        const key = await deriveKey(password, salt);
+        const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(text));
+
+        const combined = new Uint8Array(salt.length + iv.length + new Uint8Array(encrypted).length);
+        combined.set(salt, 0);
+        combined.set(iv, salt.length);
+        combined.set(new Uint8Array(encrypted), salt.length + iv.length);
+
+        const base64 = btoa(String.fromCharCode(...combined));
+        output.innerHTML = `<span class="output-label">🔒 Encrypted</span>${base64}`;
+    } catch (e) {
+        output.innerHTML = `<span class="output-label">Error</span><span style="color: var(--accent-red);">${e.message}</span>`;
+    }
+}
+
+async function doDecrypt() {
+    const text = document.getElementById('demoInput').value;
+    const password = document.getElementById('demoKey').value;
+    const output = document.getElementById('demoOutput');
+
+    if (!text || !password) {
+        output.innerHTML = '<span class="output-label">Error</span><span style="color: var(--accent-red);">⚠️ Please enter the encrypted text and the secret key!</span>';
+        return;
+    }
+
+    try {
+        const combined = new Uint8Array(atob(text).split('').map(c => c.charCodeAt(0)));
+        const salt = combined.slice(0, 16);
+        const iv = combined.slice(16, 28);
+        const data = combined.slice(28);
+
+        const key = await deriveKey(password, salt);
+        const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, data);
+
+        const dec = new TextDecoder();
+        output.innerHTML = `<span class="output-label">🔓 Decrypted</span><span style="color: var(--accent-green); font-size: 1.1rem;">${dec.decode(decrypted)}</span>`;
+    } catch (e) {
+        output.innerHTML = `<span class="output-label">Error</span><span style="color: var(--accent-red);">❌ Decryption failed! Wrong key or corrupted data.</span>`;
+    }
+}
+
+function demoClear() {
+    document.getElementById('demoInput').value = '';
+    document.getElementById('demoKey').value = '';
+    document.getElementById('demoOutput').innerHTML = '<span class="output-label">Output</span><span style="color: var(--text-muted);">Your result will appear here...</span>';
+}
+
+// Copy
+function copyOutput(id) {
+    const el = document.getElementById(id);
+    const label = el.querySelector('.output-label');
+    let text = el.textContent;
+    if (label) text = text.replace(label.textContent, '').trim();
+    navigator.clipboard.writeText(text).then(() => {
+        const toast = document.getElementById('copyToast');
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2000);
+    });
+}
+
+// ===== PASSWORD STRENGTH =====
+document.getElementById('passwordInput').addEventListener('input', function() {
+    const password = this.value;
+    const strengthFill = document.getElementById('strengthFill');
+    const strengthText = document.getElementById('strengthText');
+    const analysis = document.getElementById('passwordAnalysis');
+
+    if (!password) {
+        strengthFill.style.width = '0%';
+        strengthText.textContent = '';
+        analysis.innerHTML = '';
+        return;
+    }
+
+    let score = 0;
+    const checks = {
+        length8: password.length >= 8,
+        length12: password.length >= 12,
+        length16: password.length >= 16,
+        lowercase: /[a-z]/.test(password),
+        uppercase: /[A-Z]/.test(password),
+        numbers: /[0-9]/.test(password),
+        special: /[^a-zA-Z0-9]/.test(password),
+        noCommon: !['password', '123456', 'qwerty', 'admin', 'letmein', 'welcome'].includes(password.toLowerCase()),
+    };
+
+    if (checks.length8) score += 10;
+    if (checks.length12) score += 15;
+    if (checks.length16) score += 15;
+    if (checks.lowercase) score += 10;
+    if (checks.uppercase) score += 15;
+    if (checks.numbers) score += 15;
+    if (checks.special) score += 20;
+    if (!checks.noCommon) score = Math.min(score, 10);
+
+    let label, color;
+    if (score <= 15) { label = '💀 Very Weak'; color = '#ef4444'; }
+    else if (score <= 35) { label = '😟 Weak'; color = '#f97316'; }
+    else if (score <= 55) { label = '😐 Fair'; color = '#eab308'; }
+    else if (score <= 75) { label = '😊 Strong'; color = '#22c55e'; }
+    else { label = '🏰 Very Strong'; color = '#00d4ff'; }
+
+    strengthFill.style.width = score + '%';
+    strengthFill.style.background = color;
+    strengthText.textContent = label;
+    strengthText.style.color = color;
+
+    let poolSize = 0;
+    if (checks.lowercase) poolSize += 26;
+    if (checks.uppercase) poolSize += 26;
+    if (checks.numbers) poolSize += 10;
+    if (checks.special) poolSize += 33;
+    const entropy = Math.floor(password.length * Math.log2(poolSize || 1));
+
+    const combos = Math.pow(poolSize || 1, password.length);
+    const brutePerSec = 1e10;
+    const seconds = combos / brutePerSec / 2;
+    let crackTime;
+    if (seconds < 1) crackTime = 'Instantly ⚡';
+    else if (seconds < 60) crackTime = Math.round(seconds) + ' seconds';
+    else if (seconds < 3600) crackTime = Math.round(seconds / 60) + ' minutes';
+    else if (seconds < 86400) crackTime = Math.round(seconds / 3600) + ' hours';
+    else if (seconds < 31536000) crackTime = Math.round(seconds / 86400) + ' days';
+    else if (seconds < 31536000 * 1000) crackTime = Math.round(seconds / 31536000) + ' years';
+    else if (seconds < 31536000 * 1e6) crackTime = Math.round(seconds / 31536000 / 1000) + ' thousand years';
+    else if (seconds < 31536000 * 1e9) crackTime = Math.round(seconds / 31536000 / 1e6) + ' million years';
+    else crackTime = '♾️ Billions+ years';
+
+    analysis.innerHTML = `
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+            <div style="background: var(--bg-primary); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.3rem;">ENTROPY</div>
+                <div style="font-size: 1.3rem; font-weight: 700; color: var(--accent-cyan);">${entropy} bits</div>
+            </div>
+            <div style="background: var(--bg-primary); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.3rem;">BRUTE FORCE TIME</div>
+                <div style="font-size: 1.3rem; font-weight: 700; color: ${color};">${crackTime}</div>
+            </div>
+        </div>
+        <div style="margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 0.5rem;">
+            ${Object.entries({
+                'Lowercase': checks.lowercase,
+                'Uppercase': checks.uppercase,
+                'Numbers': checks.numbers,
+                'Symbols': checks.special,
+                '8+ chars': checks.length8,
+                '12+ chars': checks.length12,
+                '16+ chars': checks.length16,
+            }).map(([l, ok]) => `
+                <span style="padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;
+                    background: ${ok ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)'};
+                    color: ${ok ? 'var(--accent-green)' : 'var(--accent-red)'};">
+                    ${ok ? '✓' : '✕'} ${l}
+                </span>
+            `).join('')}
+        </div>
+    `;
+});
+</script>
+</body>
+</html>
