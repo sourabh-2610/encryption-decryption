@@ -375,28 +375,60 @@
 
         /* Footer */
         footer {
-            border-top: 1px solid var(--border); padding: 6rem 0; text-align: center;
-            overflow: hidden;
+            border-top: 1px solid var(--border); padding: 6rem 0 4rem; text-align: center;
+            overflow: hidden; position: relative;
         }
+        #sparkleCanvas {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 0;
+        }
+        .footer-content { position: relative; z-index: 1; }
         .footer-text {
-            font-size: clamp(2.5rem, 7vw, 5rem); font-weight: 900;
-            background: linear-gradient(270deg, var(--accent-cyan), var(--accent-purple), var(--accent-pink), var(--accent-cyan));
-            background-size: 300% 300%;
+            display: flex; justify-content: center; flex-wrap: wrap; gap: 0;
+            font-size: clamp(2.8rem, 8vw, 5.5rem); font-weight: 900;
+            line-height: 1.15; letter-spacing: -2px;
+            margin-bottom: 1rem;
+        }
+        .footer-letter {
+            display: inline-block; cursor: default;
+            background: linear-gradient(180deg, var(--accent-cyan), var(--accent-purple));
             -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-            animation: gradientShift 4s ease infinite, footerPulse 3s ease-in-out infinite;
-            line-height: 1.2; letter-spacing: -1px;
-            filter: drop-shadow(0 0 40px rgba(0, 212, 255, 0.3));
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.3s;
+            animation: letterWave 3s ease-in-out infinite;
+            filter: drop-shadow(0 0 10px rgba(0, 212, 255, 0.2));
+            position: relative;
         }
-        @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        .footer-letter:hover {
+            transform: translateY(-15px) scale(1.25) rotate(-5deg);
+            filter: drop-shadow(0 0 25px rgba(0, 212, 255, 0.8)) drop-shadow(0 0 50px rgba(168, 85, 247, 0.5));
+            -webkit-text-fill-color: transparent;
+            background: linear-gradient(180deg, #fff, var(--accent-cyan));
+            -webkit-background-clip: text; background-clip: text;
         }
-        @keyframes footerPulse {
-            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 40px rgba(0, 212, 255, 0.3)); }
-            50% { transform: scale(1.03); filter: drop-shadow(0 0 60px rgba(168, 85, 247, 0.5)); }
+        .footer-letter.space { width: 20px; }
+        .footer-letter.comma { margin-right: 12px; }
+
+        @keyframes letterWave {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
         }
-        .footer-sub { color: var(--text-muted); font-size: 0.9rem; margin-top: 1.5rem; }
+
+        .footer-line {
+            width: 120px; height: 4px; margin: 1.5rem auto;
+            background: linear-gradient(90deg, transparent, var(--accent-cyan), var(--accent-purple), var(--accent-pink), transparent);
+            border-radius: 2px;
+            animation: linePulse 2s ease-in-out infinite;
+        }
+        @keyframes linePulse {
+            0%, 100% { width: 120px; opacity: 0.7; }
+            50% { width: 200px; opacity: 1; }
+        }
+
+        .footer-tagline {
+            font-size: 1rem; color: var(--text-muted); margin-top: 1.5rem;
+            letter-spacing: 4px; text-transform: uppercase; font-weight: 500;
+        }
+        .footer-sub { color: var(--text-muted); font-size: 0.85rem; margin-top: 1.5rem; opacity: 0.6; }
 
         /* Animations */
         @keyframes fadeInUp {
@@ -762,9 +794,11 @@
 
 <!-- ===== FOOTER ===== -->
 <footer>
-    <div class="container">
-        <div class="footer-text">Thank You, Stay Classy</div>
-        <p class="footer-sub" style="margin-top: 1rem;">All encryption runs locally in your browser — your data never leaves your device.</p>
+    <canvas id="sparkleCanvas"></canvas>
+    <div class="container footer-content">
+        <div class="footer-text" id="footerText"></div>
+        <div class="footer-line"></div>
+        <p class="footer-sub">All encryption runs locally in your browser — your data never leaves your device.</p>
     </div>
 </footer>
 
@@ -1107,6 +1141,108 @@ document.getElementById('passwordInput').addEventListener('input', function() {
         </div>
     `;
 });
+
+// ===== FOOTER: Per-letter animation =====
+(function() {
+    const text = "Thank You, Stay Classy";
+    const container = document.getElementById('footerText');
+    const colors = ['#00d4ff', '#a855f7', '#ec4899', '#22c55e', '#00d4ff'];
+
+    text.split('').forEach((char, i) => {
+        const span = document.createElement('span');
+
+        if (char === ' ') {
+            span.className = 'footer-letter space';
+            span.innerHTML = '&nbsp;';
+        } else {
+            span.className = 'footer-letter' + (char === ',' ? ' comma' : '');
+            span.textContent = char;
+        }
+
+        // Stagger the wave animation per letter
+        span.style.animationDelay = (i * 0.12) + 's';
+
+        // Cycle gradient colors per letter
+        const c1 = colors[i % colors.length];
+        const c2 = colors[(i + 1) % colors.length];
+        span.style.background = `linear-gradient(180deg, ${c1}, ${c2})`;
+        span.style.webkitBackgroundClip = 'text';
+        span.style.backgroundClip = 'text';
+        span.style.webkitTextFillColor = 'transparent';
+
+        container.appendChild(span);
+    });
+})();
+
+// ===== FOOTER: Sparkle particles =====
+(function() {
+    const canvas = document.getElementById('sparkleCanvas');
+    const ctx = canvas.getContext('2d');
+    const footer = canvas.parentElement;
+
+    function resize() {
+        canvas.width = footer.offsetWidth;
+        canvas.height = footer.offsetHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    const particles = [];
+    const colors = ['#00d4ff', '#a855f7', '#ec4899', '#ffffff'];
+
+    class Particle {
+        constructor() { this.reset(); }
+        reset() {
+            this.x = Math.random() * canvas.width;
+            this.y = Math.random() * canvas.height;
+            this.size = Math.random() * 3 + 1;
+            this.speedX = (Math.random() - 0.5) * 0.5;
+            this.speedY = (Math.random() - 0.5) * 0.5;
+            this.opacity = Math.random() * 0.7 + 0.2;
+            this.fadeDir = Math.random() > 0.5 ? 1 : -1;
+            this.color = colors[Math.floor(Math.random() * colors.length)];
+        }
+        update() {
+            this.x += this.speedX;
+            this.y += this.speedY;
+            this.opacity += this.fadeDir * 0.008;
+            if (this.opacity >= 1) this.fadeDir = -1;
+            if (this.opacity <= 0) this.reset();
+            if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
+            if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
+        }
+        draw() {
+            ctx.save();
+            ctx.globalAlpha = this.opacity;
+            ctx.fillStyle = this.color;
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = this.color;
+            ctx.beginPath();
+            // Draw a 4-point star
+            const s = this.size;
+            ctx.moveTo(this.x, this.y - s * 2);
+            ctx.lineTo(this.x + s * 0.5, this.y - s * 0.5);
+            ctx.lineTo(this.x + s * 2, this.y);
+            ctx.lineTo(this.x + s * 0.5, this.y + s * 0.5);
+            ctx.lineTo(this.x, this.y + s * 2);
+            ctx.lineTo(this.x - s * 0.5, this.y + s * 0.5);
+            ctx.lineTo(this.x - s * 2, this.y);
+            ctx.lineTo(this.x - s * 0.5, this.y - s * 0.5);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+        }
+    }
+
+    for (let i = 0; i < 50; i++) particles.push(new Particle());
+
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => { p.update(); p.draw(); });
+        requestAnimationFrame(animate);
+    }
+    animate();
+})();
 </script>
 </body>
 </html>
